@@ -7,12 +7,30 @@ import { EditionMetadataWithOwnerOutputSchema } from '@thirdweb-dev/sdk';
 const StateContext = createContext();
 
 export const StateContextProvider = ({ children }) => {
-  const { contract } = useContract('0xCc2009f538Fe4F58eE2FbC8f269780137cDf11f4');
+  const { contract } = useContract('0xee48E524912061a3dD0498B6Bd71F7945E7B3E6A');
   const { mutateAsync: createCampaign } = useContractWrite(contract, 'createCampaign');
+  const { mutateAsync: setUserShippingInfo } = useContractWrite(contract, "setUserShippingInfo")
 
   //for adress of smart wallet
   const address = useAddress();
   const connect = useMetamask();
+
+
+  const publishShipping = async (form) => {
+    try {
+      const data = await setUserShippingInfo({
+				args: [
+					address, // owner
+					form.userName, // title
+          form.shippingServiceName, // description
+				],
+			});
+
+      console.log("contract call success", data)
+    } catch (error) {
+      console.log("contract call failure", error)
+    }
+  }
 
   const publishCampaign = async (form) => {
     try {
@@ -35,6 +53,7 @@ export const StateContextProvider = ({ children }) => {
 
   const getCampaigns = async () => {
     const campaigns = await contract.call('getCampaigns');
+    console.log('from context', campaigns)
 
     const parsedCampaings = campaigns.map((campaign, i) => ({
       owner: campaign.owner,
@@ -88,6 +107,7 @@ export const StateContextProvider = ({ children }) => {
         contract,
         connect,
         createCampaign: publishCampaign,
+        createShipping:publishShipping,
         getCampaigns,
         getUserCampaigns,
         donate,
